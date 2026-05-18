@@ -17,7 +17,6 @@ const TERMS_BY_SOURCE = {
     { term: "Accompagnement", note: "4/7 clients ★" },
     { term: "Suivi",          note: "Gan Prévoyance" },
     { term: "Entretien / Bilan", note: "Gan Prévoyance" },
-    { term: "Revue d'activité",  note: "Atlantic" },
     { term: "Évaluation",        note: "Biogaran" },
     { term: "Coaching",          note: "Metro (keep)" },
     { term: "Projet d'agences",  note: "Gan Assurances" },
@@ -25,13 +24,11 @@ const TERMS_BY_SOURCE = {
   ceo: [
     { term: "Succès",    note: "Success sessions" },
     { term: "Échanges",  note: "Échange individuel" },
-    { term: "Suivis",    note: "Point de suivi" },
     { term: "Revue",     note: "Revue individuelle" },
   ],
   concurrent: [
     { term: "Check-in",            note: "15Five · Lattice" },
     { term: "Conversations",       note: "Betterworks" },
-    { term: "Entretiens individuels", note: "Leapsome" },
     { term: "Animation",           note: "Objow" },
   ],
 };
@@ -148,8 +145,8 @@ const SYSTEM_COMPLETE: {
   }
 } = {
   "Accompagnement": {
-    role1: "Référent / Accompagnateur (OF)",
-    role2: "Collaborateur / Bénéficiaire (OF/RH)",
+    role1: "Référent ",
+    role2: "Collaborateur ",
     session: "Séance d'accompagnement / Entretien d'accompagnement",
     teamSession: "Accompagnement collectif / Atelier d'accompagnement",
     template: "Modèle d'accompagnement",
@@ -176,29 +173,17 @@ const SYSTEM_COMPLETE: {
   "Entretien / Bilan": {
     role1: "Manager",
     role2: "Collaborateur",
-    session: "Entretien individuel / Bilan individuel (OF)",
+    session: "Entretien individuel / Bilan individuel",
     teamSession: "Bilan d'équipe",
     template: "Modèle d'entretien",
-    en: "One-to-one",
+    en: "Assessment meeting",
     enRole1: "Manager",
     enRole2: "Employee / Direct report",
-    enSession: "One-to-one",
-    enTeam: "Team debrief",
+    enSession: "Assessment meeting",
+    enTeam: "Team assessment meeting",
     enOk: false,
   },
-  "Revue d'activité": {
-    role1: "Responsable",
-    role2: "Collaborateur / Commercial",
-    session: "Revue d'activité",
-    teamSession: "Revue d'activité d'équipe",
-    template: "Modèle de revue",
-    en: "Business review / Activity review",
-    enRole1: "Manager",
-    enRole2: "Contributor / Rep (sales)",
-    enSession: "Business review / Activity review",
-    enTeam: "Team business review",
-    enOk: true,
-  },
+
   "Évaluation": {
     role1: "Évaluateur",
     role2: "Évalué",
@@ -264,19 +249,7 @@ const SYSTEM_COMPLETE: {
     enTeam: "Group exchange",
     enOk: false,
   },
-  "Suivis": {
-    role1: "Manager",
-    role2: "Collaborateur",
-    session: "Point de suivi",
-    teamSession: "Réunion de suivi",
-    template: "Modèle de suivi",
-    en: "Check-in",
-    enRole1: "Manager",
-    enRole2: "Team member",
-    enSession: "Check-in",
-    enTeam: "Team check-in",
-    enOk: true,
-  },
+
   "Revue": {
     role1: "Responsable",
     role2: "Collaborateur",
@@ -316,19 +289,7 @@ const SYSTEM_COMPLETE: {
     enTeam: "Team conversation",
     enOk: false,
   },
-  "Entretiens individuels": {
-    role1: "Manager",
-    role2: "Collaborateur / Direct report",
-    session: "Entretien individuel",
-    teamSession: "Réunion d'équipe",
-    template: "Modèle d'entretien",
-    en: "Meetings",
-    enRole1: "Manager",
-    enRole2: "Direct report / Team member",
-    enSession: "Meeting / 1-on-1 meeting",
-    enTeam: "Team meeting",
-    enOk: true,
-  },
+
   "Animation": {
     role1: "Animateur",
     role2: "Participant",
