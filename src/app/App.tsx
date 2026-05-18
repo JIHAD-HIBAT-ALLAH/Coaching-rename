@@ -777,7 +777,6 @@ function IntroStep({ onStart }: { onStart: (activeIds: string[]) => void }) {
 
 // ─── Workshop shared state type ───────────────────────────────────────────────
 type WorkshopState = {
-  step: number;
   activeGroups: string[];
   sort: SortState;
   scores: ScoreState;
@@ -791,7 +790,6 @@ type WorkshopState = {
 
 function defaultWorkshopState(): WorkshopState {
   return {
-    step: 0,
     activeGroups: GROUPS.map(g => g.id),
     sort: initSort(),
     scores: initScores(),
@@ -806,6 +804,7 @@ function defaultWorkshopState(): WorkshopState {
 
 export default function App() {
   // ── Local UI state (not synced) ──
+  const [step, setStep] = useState(0);
   const [sortGroup, setSortGroup] = useState(GROUPS[0].id);
   const [voteGroup, setVoteGroup] = useState(GROUPS[0].id);
   const [showScores, setShowScores]     = useState(false);
@@ -815,13 +814,16 @@ export default function App() {
   const [weightsError, setWeightsError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [connected, setConnected] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  // Admin mode — accessible via ?admin=true in URL
+  const isAdmin = new URLSearchParams(window.location.search).get("admin") === "true";
 
   // ── Shared state (synced via Supabase) ──
   const [ws, setWs] = useState<WorkshopState>(defaultWorkshopState());
   const pendingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Shorthand accessors
-  const step          = ws.step;
   const sort          = ws.sort;
   const scores        = ws.scores;
   const votes         = ws.votes;
@@ -876,8 +878,16 @@ export default function App() {
     }, 400);
   }
 
+  // ── Reset everything ─────────────────────────────────────────────────────
+  async function resetWorkshop() {
+    const fresh = defaultWorkshopState();
+    setWs(fresh);
+    setStep(0);
+    await supabase.from("workshop_state").upsert({ key: WORKSHOP_KEY, state: fresh });
+    setShowResetConfirm(false);
+  }
+
   // ── Setters that go through pushState ────────────────────────────────────
-  function setStep(v: number)          { pushState({ ...ws, step: v }); }
   function setSort(v: SortState)       { pushState({ ...ws, sort: v }); }
   function setScores(v: ScoreState)    { pushState({ ...ws, scores: v }); }
   function setVotes(v: VoteState)      { pushState({ ...ws, votes: v }); }
@@ -1079,6 +1089,15 @@ export default function App() {
               <span className={`w-1.5 h-1.5 rounded-full ${syncing ? "bg-amber-400 animate-pulse" : "bg-green-500"}`} />
               {syncing ? "Sync..." : "En direct"}
             </div>
+            {/* Admin reset button */}
+            {isAdmin && (
+              <button
+                onClick={() => setShowResetConfirm(true)}
+                className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors font-semibold"
+              >
+                🔄 Reset atelier
+              </button>
+            )}
             <button
               onClick={() => setShowProfiles(true)}
               className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-100 font-medium"
@@ -1857,14 +1876,15 @@ export default function App() {
                       .map((term, i) => {
                         const sys = getSystemRow(term);
                         if (!SYSTEM_COMPLETE[term] && !systemEdits[term]) return null;
-                        const cellCls = "w-full text-xs bg-transparent border border-transparent hover:border-gray-200 focus:border-gray-400 rounded-md px-2 py-1 focus:outline-none transition-colors leading-snug";
+                        const cellCls = "w-full text-xs bg-transparent border border-transparent hover:border-gray-200 focus:border-gray-400 rounded-md px-2 py-1 focus:outline-none transition-colors leading-snug resize-none overflow-hidden";
+                        const autoResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => { e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; };
                         return (
                           <tr key={term} className={`border-b border-black/[0.04] last:border-0 ${i % 2 === 0 ? "" : "bg-gray-50/50"}`}>
                             <td className="px-4 py-2.5 font-semibold text-gray-900 whitespace-nowrap text-sm">{term}</td>
-                            <td className="px-2 py-2 max-w-[140px]"><input className={cellCls} value={sys.role1} onChange={e => updateSystemField(term, "role1", e.target.value)} placeholder="ex-Coach" title={sys.role1} /></td>
-                            <td className="px-2 py-2 max-w-[140px]"><input className={cellCls} value={sys.role2} onChange={e => updateSystemField(term, "role2", e.target.value)} placeholder="ex-Coaché" title={sys.role2} /></td>
-                            <td className="px-2 py-2 max-w-[180px]"><input className={cellCls} value={sys.session} onChange={e => updateSystemField(term, "session", e.target.value)} placeholder="Séance de coaching" title={sys.session} /></td>
-                            <td className="px-2 py-2 max-w-[180px]"><input className={cellCls} value={sys.teamSession || ""} onChange={e => updateSystemField(term, "teamSession", e.target.value)} placeholder="Réunion d'équipe" title={sys.teamSession} /></td>
+                            <td className="px-2 py-2 max-w-[140px]"><textarea rows={2} className={cellCls} value={sys.role1} onChange={e => { autoResize(e); updateSystemField(term, "role1", e.target.value); }} placeholder="ex-Coach" /></td>
+                            <td className="px-2 py-2 max-w-[140px]"><textarea rows={2} className={cellCls} value={sys.role2} onChange={e => { autoResize(e); updateSystemField(term, "role2", e.target.value); }} placeholder="ex-Coaché" /></td>
+                            <td className="px-2 py-2 max-w-[180px]"><textarea rows={2} className={cellCls} value={sys.session} onChange={e => { autoResize(e); updateSystemField(term, "session", e.target.value); }} placeholder="Séance de coaching" /></td>
+                            <td className="px-2 py-2 max-w-[180px]"><textarea rows={2} className={cellCls} value={sys.teamSession || ""} onChange={e => { autoResize(e); updateSystemField(term, "teamSession", e.target.value); }} placeholder="Réunion d'équipe" /></td>
                             <td className="px-2 py-2 text-center">
                               {activeScoreGroup === "central" ? (() => {
                                 const verdict = getCentralOkVerdict(term);
@@ -1924,15 +1944,16 @@ export default function App() {
                       .map((term, i) => {
                         const sys = getSystemRow(term);
                         if (!SYSTEM_COMPLETE[term] && !systemEdits[term]) return null;
-                        const cellCls = "w-full text-xs bg-transparent border border-transparent hover:border-gray-200 focus:border-gray-400 rounded-md px-2 py-1 focus:outline-none transition-colors leading-snug";
+                        const cellCls = "w-full text-xs bg-transparent border border-transparent hover:border-gray-200 focus:border-gray-400 rounded-md px-2 py-1 focus:outline-none transition-colors leading-snug resize-none overflow-hidden";
+                        const autoResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => { e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; };
                         return (
                           <tr key={term} className={`border-b border-black/[0.04] last:border-0 ${i % 2 === 0 ? "" : "bg-blue-50/30"}`}>
                             <td className="px-4 py-2.5 font-semibold text-gray-900 whitespace-nowrap text-sm">{term}</td>
-                            <td className="px-2 py-2 max-w-[140px]"><input className={cellCls} value={sys.en} onChange={e => updateSystemField(term, "en", e.target.value)} placeholder="Terme EN" title={sys.en} /></td>
-                            <td className="px-2 py-2 max-w-[130px]"><input className={cellCls} value={sys.enRole1 || ""} onChange={e => updateSystemField(term, "enRole1", e.target.value)} placeholder="EN Coach" title={sys.enRole1} /></td>
-                            <td className="px-2 py-2 max-w-[130px]"><input className={cellCls} value={sys.enRole2 || ""} onChange={e => updateSystemField(term, "enRole2", e.target.value)} placeholder="EN Coachee" title={sys.enRole2} /></td>
-                            <td className="px-2 py-2 max-w-[180px]"><input className={cellCls} value={sys.enSession || ""} onChange={e => updateSystemField(term, "enSession", e.target.value)} placeholder="EN Coaching Session" title={sys.enSession} /></td>
-                            <td className="px-2 py-2 max-w-[160px]"><input className={cellCls} value={sys.enTeam || ""} onChange={e => updateSystemField(term, "enTeam", e.target.value)} placeholder="EN Team Meeting" title={sys.enTeam} /></td>
+                            <td className="px-2 py-2 max-w-[140px]"><textarea rows={2} className={cellCls} value={sys.en} onChange={e => { autoResize(e); updateSystemField(term, "en", e.target.value); }} placeholder="Terme EN" /></td>
+                            <td className="px-2 py-2 max-w-[130px]"><textarea rows={2} className={cellCls} value={sys.enRole1 || ""} onChange={e => { autoResize(e); updateSystemField(term, "enRole1", e.target.value); }} placeholder="EN Coach" /></td>
+                            <td className="px-2 py-2 max-w-[130px]"><textarea rows={2} className={cellCls} value={sys.enRole2 || ""} onChange={e => { autoResize(e); updateSystemField(term, "enRole2", e.target.value); }} placeholder="EN Coachee" /></td>
+                            <td className="px-2 py-2 max-w-[180px]"><textarea rows={2} className={cellCls} value={sys.enSession || ""} onChange={e => { autoResize(e); updateSystemField(term, "enSession", e.target.value); }} placeholder="EN Coaching Session" /></td>
+                            <td className="px-2 py-2 max-w-[160px]"><textarea rows={2} className={cellCls} value={sys.enTeam || ""} onChange={e => { autoResize(e); updateSystemField(term, "enTeam", e.target.value); }} placeholder="EN Team Meeting" /></td>
                             <td className="px-2 py-2 text-center">
                               {activeScoreGroup === "central" ? (() => {
                                 const verdict = getCentralEnOkVerdict(term);
@@ -2439,6 +2460,33 @@ export default function App() {
       </main>
 
       {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
+
+      {/* Reset confirm modal */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <h3 className="font-bold text-lg mb-2">Réinitialiser l'atelier ?</h3>
+            <p className="text-sm text-gray-500 mb-6">
+              Toutes les données seront effacées — card sorting, scores, votes, système complet.
+              Cette action est <strong>irréversible</strong>.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                className="flex-1 px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={resetWorkshop}
+                className="flex-1 px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors"
+              >
+                Oui, tout effacer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showProfiles && <ProfileDrawer onClose={() => setShowProfiles(false)} />}
     </div>
   );
