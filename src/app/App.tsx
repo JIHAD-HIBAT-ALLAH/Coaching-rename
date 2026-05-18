@@ -931,17 +931,7 @@ export default function App() {
     setWeightsError(total !== 100 ? `Total : ${total}% — doit être égal à 100%` : null);
   }
 
-  // ── Loading screen ────────────────────────────────────────────────────────
-  if (!connected) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-sm text-gray-500">Connexion à l'atelier...</p>
-        </div>
-      </div>
-    );
-  }
+  // ── Loading screen moved to render ──
 
   // Per-group weighted score
   function calcWeightedGroup(gid: string, term: string): number {
@@ -1038,6 +1028,17 @@ export default function App() {
   const stepLabels = ["Card Sorting", "Restitution", "Système", "Scoring", "Dot Voting", "Résultats"];
 
   // ── Render ──
+
+  if (!connected) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-sm text-gray-500">Connexion à l'atelier...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
