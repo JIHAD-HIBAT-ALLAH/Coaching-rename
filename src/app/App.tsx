@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useState, useEffect, useRef } from "react";
 import { Check, Eye, EyeOff, BookOpen, X, Printer } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
@@ -1876,15 +1877,34 @@ export default function App() {
                       .map((term, i) => {
                         const sys = getSystemRow(term);
                         if (!SYSTEM_COMPLETE[term] && !systemEdits[term]) return null;
-                        const cellCls = "w-full text-xs bg-transparent border border-transparent hover:border-gray-200 focus:border-gray-400 rounded-md px-2 py-1 focus:outline-none transition-colors leading-snug resize-none overflow-hidden";
-                        const autoResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => { e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; };
+                        const EditCell = ({ field, value, placeholder }: { field: string; value: string; placeholder: string }) => {
+                          const [editing, setEditing] = React.useState(false);
+                          return editing ? (
+                            <textarea
+                              autoFocus
+                              rows={2}
+                              className="w-full text-xs bg-white border border-blue-400 rounded-md px-2 py-1 focus:outline-none leading-snug resize-none"
+                              value={value}
+                              onChange={e => updateSystemField(term, field, e.target.value)}
+                              onBlur={() => setEditing(false)}
+                            />
+                          ) : (
+                            <div
+                              onClick={() => setEditing(true)}
+                              className="text-xs leading-snug text-gray-700 cursor-pointer hover:bg-gray-100 rounded px-2 py-1 min-h-[28px] whitespace-pre-wrap break-words"
+                              title="Cliquer pour éditer"
+                            >
+                              {value || <span className="text-gray-300 italic">{placeholder}</span>}
+                            </div>
+                          );
+                        };
                         return (
                           <tr key={term} className={`border-b border-black/[0.04] last:border-0 ${i % 2 === 0 ? "" : "bg-gray-50/50"}`}>
                             <td className="px-4 py-2.5 font-semibold text-gray-900 whitespace-nowrap text-sm">{term}</td>
-                            <td className="px-2 py-2 max-w-[140px]"><textarea rows={2} className={cellCls} value={sys.role1} onChange={e => { autoResize(e); updateSystemField(term, "role1", e.target.value); }} placeholder="ex-Coach" /></td>
-                            <td className="px-2 py-2 max-w-[140px]"><textarea rows={2} className={cellCls} value={sys.role2} onChange={e => { autoResize(e); updateSystemField(term, "role2", e.target.value); }} placeholder="ex-Coaché" /></td>
-                            <td className="px-2 py-2 max-w-[180px]"><textarea rows={2} className={cellCls} value={sys.session} onChange={e => { autoResize(e); updateSystemField(term, "session", e.target.value); }} placeholder="Séance de coaching" /></td>
-                            <td className="px-2 py-2 max-w-[180px]"><textarea rows={2} className={cellCls} value={sys.teamSession || ""} onChange={e => { autoResize(e); updateSystemField(term, "teamSession", e.target.value); }} placeholder="Réunion d'équipe" /></td>
+                            <td className="px-2 py-2 max-w-[140px]"><EditCell field="role1" value={sys.role1} placeholder="ex-Coach" /></td>
+                            <td className="px-2 py-2 max-w-[140px]"><EditCell field="role2" value={sys.role2} placeholder="ex-Coaché" /></td>
+                            <td className="px-2 py-2 max-w-[180px]"><EditCell field="session" value={sys.session} placeholder="Séance de coaching" /></td>
+                            <td className="px-2 py-2 max-w-[180px]"><EditCell field="teamSession" value={sys.teamSession || ""} placeholder="Réunion d'équipe" /></td>
                             <td className="px-2 py-2 text-center">
                               {activeScoreGroup === "central" ? (() => {
                                 const verdict = getCentralOkVerdict(term);
@@ -1944,16 +1964,35 @@ export default function App() {
                       .map((term, i) => {
                         const sys = getSystemRow(term);
                         if (!SYSTEM_COMPLETE[term] && !systemEdits[term]) return null;
-                        const cellCls = "w-full text-xs bg-transparent border border-transparent hover:border-gray-200 focus:border-gray-400 rounded-md px-2 py-1 focus:outline-none transition-colors leading-snug resize-none overflow-hidden";
-                        const autoResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => { e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; };
+                        const EditCellEN = ({ field, value, placeholder }: { field: string; value: string; placeholder: string }) => {
+                          const [editing, setEditing] = React.useState(false);
+                          return editing ? (
+                            <textarea
+                              autoFocus
+                              rows={2}
+                              className="w-full text-xs bg-white border border-blue-400 rounded-md px-2 py-1 focus:outline-none leading-snug resize-none"
+                              value={value}
+                              onChange={e => updateSystemField(term, field, e.target.value)}
+                              onBlur={() => setEditing(false)}
+                            />
+                          ) : (
+                            <div
+                              onClick={() => setEditing(true)}
+                              className="text-xs leading-snug text-gray-700 cursor-pointer hover:bg-blue-50 rounded px-2 py-1 min-h-[28px] whitespace-pre-wrap break-words"
+                              title="Cliquer pour éditer"
+                            >
+                              {value || <span className="text-gray-300 italic">{placeholder}</span>}
+                            </div>
+                          );
+                        };
                         return (
                           <tr key={term} className={`border-b border-black/[0.04] last:border-0 ${i % 2 === 0 ? "" : "bg-blue-50/30"}`}>
                             <td className="px-4 py-2.5 font-semibold text-gray-900 whitespace-nowrap text-sm">{term}</td>
-                            <td className="px-2 py-2 max-w-[140px]"><textarea rows={2} className={cellCls} value={sys.en} onChange={e => { autoResize(e); updateSystemField(term, "en", e.target.value); }} placeholder="Terme EN" /></td>
-                            <td className="px-2 py-2 max-w-[130px]"><textarea rows={2} className={cellCls} value={sys.enRole1 || ""} onChange={e => { autoResize(e); updateSystemField(term, "enRole1", e.target.value); }} placeholder="EN Coach" /></td>
-                            <td className="px-2 py-2 max-w-[130px]"><textarea rows={2} className={cellCls} value={sys.enRole2 || ""} onChange={e => { autoResize(e); updateSystemField(term, "enRole2", e.target.value); }} placeholder="EN Coachee" /></td>
-                            <td className="px-2 py-2 max-w-[180px]"><textarea rows={2} className={cellCls} value={sys.enSession || ""} onChange={e => { autoResize(e); updateSystemField(term, "enSession", e.target.value); }} placeholder="EN Coaching Session" /></td>
-                            <td className="px-2 py-2 max-w-[160px]"><textarea rows={2} className={cellCls} value={sys.enTeam || ""} onChange={e => { autoResize(e); updateSystemField(term, "enTeam", e.target.value); }} placeholder="EN Team Meeting" /></td>
+                            <td className="px-2 py-2 max-w-[140px]"><EditCellEN field="en" value={sys.en} placeholder="Terme EN" /></td>
+                            <td className="px-2 py-2 max-w-[130px]"><EditCellEN field="enRole1" value={sys.enRole1 || ""} placeholder="EN Coach" /></td>
+                            <td className="px-2 py-2 max-w-[130px]"><EditCellEN field="enRole2" value={sys.enRole2 || ""} placeholder="EN Coachee" /></td>
+                            <td className="px-2 py-2 max-w-[180px]"><EditCellEN field="enSession" value={sys.enSession || ""} placeholder="EN Coaching Session" /></td>
+                            <td className="px-2 py-2 max-w-[160px]"><EditCellEN field="enTeam" value={sys.enTeam || ""} placeholder="EN Team Meeting" /></td>
                             <td className="px-2 py-2 text-center">
                               {activeScoreGroup === "central" ? (() => {
                                 const verdict = getCentralEnOkVerdict(term);
